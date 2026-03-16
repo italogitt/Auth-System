@@ -1,27 +1,37 @@
-import { v4 as uuidv4 } from "uuid"
+import { Prisma, PrismaClient } from "@prisma/client"
 
-const usersArray = []
+const prisma = new PrismaClient()
 
-export const createUser = (req, res) => {
+export default prisma
+
+export const createUser = async (req, res) => {
     const { userName, userEmail } = req.body
 
-    const user = { id: uuidv4(), userName, userEmail }
-
-    usersArray.push(user)
+    const newUser = await prisma.user.create({
+        data:{
+            userName: userName,
+            userEmail: userEmail
+        }
+    })
 
     return res.status(201).json({
         message: "User successfully created",
-        user: user
+        user: newUser
     })
 }
 
-export const getAllUsers = (req, res) => {
-    return res.status(200).json({ users: usersArray })
+export const getAllUsers = async (req, res) => {
+    const users = await prisma.user.findMany()
+
+    return res.status(200).json(users)
 }
 
-export const getUserById = (req, res) => {
-    const id = req.params.id
-    const userFound = usersArray.find(user => user.id === id)
+export const getUserById = async (req, res) => {
+    const userFound = await prisma.user.findUnique({
+        where: {
+            id: req.params.id
+        }
+    })
 
     if (userFound) {
         return res.status(200).json({ user: userFound })
@@ -30,30 +40,47 @@ export const getUserById = (req, res) => {
     }
 }
 
-export const deleteUser = (req, res) => {
+export const updateUser = async (req, res) => {
     const id = req.params.id
-    const userFoundIndex = usersArray.findIndex(user => user.id === id)
+    const { userName, userEmail } = req.body
 
-    if (userFoundIndex >= 0) {
-        usersArray.splice(userFoundIndex, 1)
-        return res.status(200).json({ message: "User deleted successfully" })
-    } else { 
+    const userFound = await prisma.user.findUnique({
+        where: {
+            id: id
+        }
+    })
+
+    if (userFound) {
+        await prisma.user.update({
+            where: {
+                id: id
+            }
+        })
+        return res.status(200).json({
+            message: "User successfully updated",
+            user: usersArray[userFoundIndex]
+        })
+    } else {
         return res.status(404).json({ message: "User not found" })
     }
 }
 
-export const updateUser = (req, res) => {
+export const deleteUser = async (req, res) => {
     const id = req.params.id
-    const { userName, userEmail } = req.body
-    const userFoundIndex = usersArray.findIndex(user => user.id === id)
 
-    if (userFoundIndex >= 0){
-        usersArray[userFoundIndex].userName = userName
-        usersArray[userFoundIndex].userEmail= userEmail
-        return res.status(200).json({ 
-            message: "User successfully updated", 
-            user: usersArray[userFoundIndex]
+    const userFound = await prisma.user.findUnique({
+        where: {
+            id: id
+        }
+    })
+
+    if (userFound) {
+        await prisma.user.delete({
+            where: {
+                id: id
+            }
         })
+        return res.status(200).json({ message: "User deleted successfully" })
     } else {
         return res.status(404).json({ message: "User not found" })
     }
