@@ -40,7 +40,13 @@ export const createUser = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
     try {
-        const users = await prisma.user.findMany()
+        const users = await prisma.user.findMany({
+            select: {
+                id: true,
+                userName: true,
+                userEmail: true
+            }
+        })
 
         return res.status(200).json(users)
     } catch (error) {
@@ -57,6 +63,11 @@ export const getUserById = async (req, res) => {
         const userFound = await prisma.user.findUnique({
             where: {
                 id: req.params.id
+            },
+            select: {
+                id: true,
+                userName: true,
+                userEmail: true
             }
         })
 
@@ -93,6 +104,11 @@ export const updateUser = async (req, res) => {
                 data: {
                     userName: userName,
                     userEmail: userEmail
+                },
+                select: {
+                    id: true,
+                    userName: true,
+                    userEmail: true
                 }
             })
 
@@ -164,7 +180,7 @@ export const login = async (req, res) => {
         const token = jwt.sign(
             { id: userFound.id },
             process.env.JWT_SECRET,
-            { expiresIn: '1d'}
+            { expiresIn: '1d' }
         )
 
         return res.status(200).json({
