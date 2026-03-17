@@ -62,7 +62,7 @@ export const getUserById = async (req, res) => {
     try {
         const userFound = await prisma.user.findUnique({
             where: {
-                id: req.params.id
+                id: req.userId
             },
             select: {
                 id: true,
@@ -87,7 +87,7 @@ export const getUserById = async (req, res) => {
 
 export const updateUser = async (req, res) => {
     try {
-        const id = req.params.id
+        const id = req.userId
         const { userName, userEmail } = req.body
 
         const userFound = await prisma.user.findUnique({
@@ -130,7 +130,7 @@ export const updateUser = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
     try {
-        const id = req.params.id
+        const id = req.userId
 
         const userFound = await prisma.user.findUnique({
             where: {
