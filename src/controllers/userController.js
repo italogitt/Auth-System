@@ -32,6 +32,14 @@ export const createUser = async (req, res) => {
     } catch (error) {
         console.error(error)
 
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+                return res.status(400).json({
+                    error: "Error creating user. The email address provided may already be in use."
+                })
+            }
+        }
+
         return res.status(400).json({
             error: "Error creating user. The email address provided may already be in use."
         })
@@ -90,41 +98,39 @@ export const updateUser = async (req, res) => {
         const id = req.userId
         const { userName, userEmail } = req.body
 
-        const userFound = await prisma.user.findUnique({
+        const updatedUser = await prisma.user.update({
             where: {
                 id: id
+            },
+            data: {
+                userName: userName,
+                userEmail: userEmail
+            },
+            select: {
+                id: true,
+                userName: true,
+                userEmail: true
             }
         })
 
-        if (userFound) {
-            const updatedUser = await prisma.user.update({
-                where: {
-                    id: id
-                },
-                data: {
-                    userName: userName,
-                    userEmail: userEmail
-                },
-                select: {
-                    id: true,
-                    userName: true,
-                    userEmail: true
-                }
-            })
+        return res.status(200).json({
+            message: "User successfully updated",
+            user: updatedUser
+        })
 
-            return res.status(200).json({
-                message: "User successfully updated",
-                user: updatedUser
-            })
-        } else {
-            return res.status(404).json({ message: "User not found" })
-        }
     } catch (error) {
         console.error(error)
+
+        if (error.code === 'P2025') {
+            return res.status(404).json({
+                message: "User not found"
+            })
+        }
 
         return res.status(500).json({
             error: "Internal server error."
         })
+
     }
 }
 
@@ -132,24 +138,22 @@ export const deleteUser = async (req, res) => {
     try {
         const id = req.userId
 
-        const userFound = await prisma.user.findUnique({
+
+        await prisma.user.delete({
             where: {
                 id: id
             }
         })
+        return res.status(200).json({ message: "User deleted successfully" })
 
-        if (userFound) {
-            await prisma.user.delete({
-                where: {
-                    id: id
-                }
-            })
-            return res.status(200).json({ message: "User deleted successfully" })
-        } else {
-            return res.status(404).json({ message: "User not found" })
-        }
     } catch (error) {
         console.error(error)
+
+        if (error.code === 'P2025'){
+            return res.status(404).json({
+                message: "User nor found"
+            })
+        }
 
         return res.status(500).json({
             error: "Internal server error."
