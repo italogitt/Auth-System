@@ -9,7 +9,7 @@ router.post("/", validateUser, createUser)
 router.get("/",jwtValidation, getAllUsers)
 router.get("/profile", jwtValidation, getUserById)
 router.delete("/profile", jwtValidation, deleteUser)
-router.put("/profile",validateUpdateUser, jwtValidation, updateUser)
+router.put("/profile", jwtValidation ,validateUpdateUser, updateUser)
 router.post("/login", login)
 
 export default router
